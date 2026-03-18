@@ -1,64 +1,96 @@
 # Multi-Layer Steering Wheel / Motorsport Dashboard Platform
 
-A greenfield, Python-first motorsport dashboard platform intended to support:
+A Python-first, reusable motorsport telemetry dashboard platform scaffold for sim racing, real vehicles, FSAE dashboards, and future custom display projects.
 
-- sim racing dashboards
-- real vehicle dashboards
-- FSAE dashboards
-- future custom telemetry and HMI display projects
+## What this repository provides
 
-## Platform goals
+- a unified normalized signal model
+- a visual multi-tab **Editor** desktop application
+- a reusable **Dash** runtime desktop application with headless mode
+- configuration-driven signals, widgets, pages, themes, profiles, alerts, CAN mappings, and peripherals
+- project JSON serialization and validation
+- a runtime signal store with stale/missing handling, smoothing, and deadband behavior
+- a starter alert engine and mock telemetry backend
+- example project configuration spanning sim signals and FSAE/CAN-style signals
+- direct launchers under `bin/`
+- tests and architecture documentation
 
-- unified signal-driven architecture
-- rich editor separated from lightweight runtime
-- reusable widget/page/theme/profile system
-- first-class CAN support for FSAE and real vehicle use
-- future-proof backend and peripheral extensibility
-- robust stale/missing data handling
-- configurable alerts, styles, and hardware outputs
+## Repository layout
 
-## Repository structure
+- `src/motorsport_dashboard_platform/` — shared package and both applications
+- `src/motorsport_dashboard_platform/core/` — domain models, validation, project IO, runtime, example project
+- `src/motorsport_dashboard_platform/editor/` — editor controller and Tkinter visual editor
+- `src/motorsport_dashboard_platform/dash/` — dash controller and Tkinter runtime app
+- `src/motorsport_dashboard_platform/examples/demo_project.json` — example project file
+- `docs/architecture/overview.md` — architecture overview and extension points
+- `bin/` — POSIX and Windows launchers
+- `tests/` — unit and smoke tests
 
-- `docs/architecture/` — architecture and roadmap documents
-- `apps/dash/` — runnable Python dashboard application
-- `apps/editor/` — runnable Python editor application
-- `src/motorsport_dashboard_platform/` — shared Python domain models, validation, IO, runtime signal logic, rules, and CLI tools
-- `tests/` — foundational unit tests for schemas, validation, and runtime behavior
+## Architecture summary
 
-## Current status
+The platform is built around a `DashboardProject` aggregate that stores all configuration. Runtime telemetry never binds widgets directly to source-specific fields; widgets bind to normalized platform signal IDs. The runtime keeps definitions (`SignalDefinition`) separate from live state (`SignalState`) and evaluates alerts against the normalized store.
 
-This repository now contains:
+The code intentionally separates:
 
-- architecture documentation
-- Python domain/configuration models
-- project serialization and validation utilities
-- runtime signal store and alert evaluation foundations
-- a comprehensive example project definition
-- CLI entry points for exporting and validating project files
-- two runnable applications: `mlsw-editor` and `mlsw-dash`
-- a multi-tab visual editor for metadata, signals, widgets, pages, alerts, profiles, and JSON export
+- **Editor app** — build/edit/validate dashboard projects visually
+- **Dash app** — run/preview pages with live or future live-like backends
+- **Core package** — shared contracts, runtime logic, persistence, and validation
 
 ## Quick start
 
+### Run the editor
+
 ```bash
-./bin/mlsw-editor --headless --validate
-./bin/mlsw-dash --headless --ticks 3
-PYTHONPATH=src python -m unittest discover -s tests
+./bin/mlsw-editor
 ```
 
-## Recommended next build priorities
+### Run the dash preview
 
-1. JSON schema export/import and migrations
-2. concrete backend adapters (iRacing hub, CAN, UDP, serial)
-3. runtime rendering layer and widget registry
-4. editor application and property inspector flows
-5. peripheral drivers and deployment packaging
+```bash
+./bin/mlsw-dash
+```
 
+### Headless validation/export
 
-## Direct launchers
+```bash
+./bin/mlsw-editor --headless --validate
+./bin/mlsw-editor --headless --export-json
+```
 
-Two executable launchers are included in-repo so you can run the apps directly without packaging first:
+### Headless runtime preview
 
-- `./bin/mlsw-editor` / `bin\mlsw-editor.bat`
-- `./bin/mlsw-dash` / `bin\mlsw-dash.bat`
-- 
+```bash
+./bin/mlsw-dash --headless --ticks 3
+```
+
+### Run tests
+
+```bash
+PYTHONPATH=src python -m unittest discover -s tests -v
+```
+
+## Example project contents
+
+The included example project demonstrates:
+
+- sim-style normalized signals: RPM, gear, speed
+- FSAE/CAN-style signals: battery voltage, CAN bus health
+- a starter dashboard page with multiple widgets
+- a theme definition
+- alert definitions
+- a profile definition
+- a peripheral plus a hardware rule
+- CAN bus, message, signal, and mapping scaffolding
+
+## Packaging
+
+The repo includes `pyproject.toml` with console scripts:
+
+- `mlsw-editor`
+- `mlsw-dash`
+
+## Notes
+
+- The editor uses Tkinter forms and list/detail editing instead of being a raw JSON editor.
+- The dash supports headless execution for tests and can later be connected to real telemetry backends.
+- CAN, sim, and peripheral integrations are scaffolded at the model/runtime boundary for future implementation.
