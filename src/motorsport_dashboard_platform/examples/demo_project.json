@@ -1,0 +1,340 @@
+{
+  "alerts": [
+    {
+      "alert_id": "rpm-high",
+      "cooldown_ms": 500,
+      "message": "RPM high: {value:.0f}",
+      "name": "High RPM",
+      "operator": ">=",
+      "severity": "warning",
+      "signal_id": "engine_rpm",
+      "sticky": false,
+      "threshold": 7800
+    },
+    {
+      "alert_id": "battery-low",
+      "cooldown_ms": 0,
+      "message": "Battery voltage low: {value:.2f}V",
+      "name": "Battery Low",
+      "operator": "<=",
+      "severity": "critical",
+      "signal_id": "battery_voltage",
+      "sticky": true,
+      "threshold": 300.0
+    }
+  ],
+  "assets": {
+    "logo": "assets/logo.png"
+  },
+  "backends": [
+    {
+      "backend_id": "mock-primary",
+      "backend_type": "mock",
+      "enabled": true,
+      "name": "Mock Telemetry",
+      "settings": {
+        "tick_ms": 250
+      },
+      "signal_map": {
+        "gear": "gear",
+        "rpm": "engine_rpm",
+        "speed": "vehicle_speed"
+      }
+    }
+  ],
+  "can_buses": [
+    {
+      "bitrate": 500000,
+      "bus_id": "vehicle_can",
+      "channel": "can0",
+      "description": "Primary FSAE telemetry bus",
+      "name": "Vehicle CAN"
+    }
+  ],
+  "can_mappings": [
+    {
+      "can_signal_id": "bms_pack_voltage_raw",
+      "normalized_signal_id": "battery_voltage",
+      "transform": null
+    },
+    {
+      "can_signal_id": "vehicle_can_health_raw",
+      "normalized_signal_id": "can_bus_health",
+      "transform": null
+    }
+  ],
+  "can_messages": [
+    {
+      "arbitration_id": 769,
+      "bus_id": "vehicle_can",
+      "cycle_time_ms": 20,
+      "description": "Battery management system status",
+      "length": 8,
+      "message_id": "bms_status"
+    }
+  ],
+  "can_signals": [
+    {
+      "bit_length": 16,
+      "byte_order": "little_endian",
+      "description": "Pack voltage from BMS",
+      "maximum": 600.0,
+      "message_id": "bms_status",
+      "minimum": 0.0,
+      "offset": 0.0,
+      "scale": 0.1,
+      "signal_id": "bms_pack_voltage_raw",
+      "signed": false,
+      "start_bit": 0,
+      "timeout_ms": 100,
+      "units": "V"
+    },
+    {
+      "bit_length": 8,
+      "byte_order": "little_endian",
+      "description": "Percent CAN bus health",
+      "maximum": 100.0,
+      "message_id": "bms_status",
+      "minimum": 0.0,
+      "offset": 0.0,
+      "scale": 1.0,
+      "signal_id": "vehicle_can_health_raw",
+      "signed": false,
+      "start_bit": 16,
+      "timeout_ms": 100,
+      "units": "%"
+    }
+  ],
+  "hardware_rules": [
+    {
+      "name": "Blink shift lights on high RPM",
+      "output_action": "blink",
+      "peripheral_id": "shift-light-bar",
+      "rule_id": "shift-warning",
+      "settings": {
+        "color": "#ff5c39",
+        "pattern": "fast"
+      },
+      "trigger_alert_id": "rpm-high"
+    }
+  ],
+  "metadata": {
+    "author": "OpenAI Codex",
+    "description": "Example project blending sim racing and FSAE CAN telemetry.",
+    "name": "MLSW Demo Motorsport Project",
+    "project_id": "mlsw-demo",
+    "tags": [
+      "sim",
+      "fsae",
+      "can",
+      "demo"
+    ],
+    "version": "0.1.0"
+  },
+  "pages": [
+    {
+      "background": "#08111f",
+      "grid_size": 20,
+      "name": "Race Main",
+      "page_id": "race-main",
+      "theme_id": "night-race",
+      "widgets": [
+        {
+          "height": 120,
+          "name": "RPM",
+          "properties": {
+            "max": 9000
+          },
+          "signal_id": "engine_rpm",
+          "widget_id": "rpm-gauge",
+          "widget_type": "gauge",
+          "width": 180,
+          "x": 20,
+          "y": 20
+        },
+        {
+          "height": 80,
+          "name": "Speed",
+          "properties": {},
+          "signal_id": "vehicle_speed",
+          "widget_id": "speed-text",
+          "widget_type": "text",
+          "width": 140,
+          "x": 220,
+          "y": 20
+        },
+        {
+          "height": 80,
+          "name": "Gear",
+          "properties": {},
+          "signal_id": "gear",
+          "widget_id": "gear-indicator",
+          "widget_type": "indicator",
+          "width": 140,
+          "x": 220,
+          "y": 120
+        },
+        {
+          "height": 80,
+          "name": "Battery",
+          "properties": {
+            "max": 400,
+            "min": 250
+          },
+          "signal_id": "battery_voltage",
+          "widget_id": "battery-bar",
+          "widget_type": "bar",
+          "width": 200,
+          "x": 20,
+          "y": 160
+        },
+        {
+          "height": 60,
+          "name": "CAN",
+          "properties": {},
+          "signal_id": "can_bus_health",
+          "widget_id": "can-status",
+          "widget_type": "status",
+          "width": 140,
+          "x": 240,
+          "y": 220
+        }
+      ]
+    }
+  ],
+  "peripherals": [
+    {
+      "name": "Shift Light Bar",
+      "peripheral_id": "shift-light-bar",
+      "peripheral_type": "led_strip",
+      "settings": {
+        "pixels": 8,
+        "port": "COM4"
+      }
+    }
+  ],
+  "profiles": [
+    {
+      "default_page_id": "race-main",
+      "enabled_backend_ids": [
+        "mock-primary"
+      ],
+      "name": "Sim Driver",
+      "page_ids": [
+        "race-main"
+      ],
+      "profile_id": "sim-driver",
+      "theme_overrides": {
+        "brightness": 0.8
+      }
+    }
+  ],
+  "signals": [
+    {
+      "aliases": [],
+      "category": "powertrain",
+      "computed_expression": null,
+      "deadband": 0.0,
+      "description": "",
+      "display_name": "Engine RPM",
+      "enum_mapping": {},
+      "fallback_value": null,
+      "format_string": "{value:.0f}",
+      "signal_id": "engine_rpm",
+      "signal_type": "integer",
+      "smoothing_factor": 0.2,
+      "timeout_ms": 500,
+      "units": "rpm"
+    },
+    {
+      "aliases": [],
+      "category": "vehicle",
+      "computed_expression": null,
+      "deadband": 0.0,
+      "description": "",
+      "display_name": "Vehicle Speed",
+      "enum_mapping": {},
+      "fallback_value": null,
+      "format_string": "{value:.1f}",
+      "signal_id": "vehicle_speed",
+      "signal_type": "float",
+      "smoothing_factor": 0.1,
+      "timeout_ms": 500,
+      "units": "mph"
+    },
+    {
+      "aliases": [],
+      "category": "powertrain",
+      "computed_expression": null,
+      "deadband": 0.0,
+      "description": "",
+      "display_name": "Gear",
+      "enum_mapping": {
+        "1": "1",
+        "2": "2",
+        "3": "3",
+        "4": "4",
+        "5": "5",
+        "6": "6",
+        "N": "Neutral"
+      },
+      "fallback_value": null,
+      "format_string": "{value}",
+      "signal_id": "gear",
+      "signal_type": "enum",
+      "smoothing_factor": 0.0,
+      "timeout_ms": 800,
+      "units": ""
+    },
+    {
+      "aliases": [],
+      "category": "electrical",
+      "computed_expression": null,
+      "deadband": 0.0,
+      "description": "",
+      "display_name": "Battery Voltage",
+      "enum_mapping": {},
+      "fallback_value": 0.0,
+      "format_string": "{value:.2f}",
+      "signal_id": "battery_voltage",
+      "signal_type": "float",
+      "smoothing_factor": 0.0,
+      "timeout_ms": 1000,
+      "units": "V"
+    },
+    {
+      "aliases": [],
+      "category": "network",
+      "computed_expression": null,
+      "deadband": 0.0,
+      "description": "",
+      "display_name": "CAN Bus Health",
+      "enum_mapping": {},
+      "fallback_value": 0,
+      "format_string": "{value:.0f}",
+      "signal_id": "can_bus_health",
+      "signal_type": "integer",
+      "smoothing_factor": 0.0,
+      "timeout_ms": 1000,
+      "units": "%"
+    }
+  ],
+  "themes": [
+    {
+      "font_family": "TkDefaultFont",
+      "font_size": 12,
+      "name": "Night Race",
+      "palette": {
+        "accent": "#ff5c39",
+        "background": "#08111f",
+        "critical": "#ff3864",
+        "foreground": "#f2f7ff",
+        "warning": "#ffc857"
+      },
+      "theme_id": "night-race",
+      "widget_style_defaults": {
+        "padding": 8
+      }
+    }
+  ]
+}
